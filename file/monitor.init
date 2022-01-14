@@ -1,0 +1,59 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2008-2014 OpenWrt.org
+
+START=99
+STOP=99
+
+USE_PROCD=1
+PROG="monitor.lua"
+NAME=monitor
+
+validate_section() {
+	uci_validate_section $NAME main "monitor" \
+		'debug_file:string' \
+		'pidfile:string' \
+		'include:string' \
+		'debug_level:string'
+	return $?
+}
+
+start_service() {
+	config_load "${NAME}"
+	validate_section || {
+		echo "validation failed"
+		return 1
+	}
+	config_get pidfile main pidfile
+	config_get debug_file main debug_file
+	config_get include main include
+	config_get debug_level main debug_level
+	[ -z "$pidfile" ] && pidfile="/var/run/lua-monitor.pid"
+	[ -z "$include" ] && include="/etc/lua-monitor/conf.d"
+	[ -z "$debug_level" ] && debug_level="info"
+	json_init
+	json_add_string pidfile $pidfile
+	json_add_string include $include
+	json_add_string debug_level $debug_level
+	[ -n "$debug_file" ] && json_add_string debug_file $debug_file
+	res=$(json_dump)
+	mkdir /etc/lua-monitor/ -p
+	echo $res >/etc/lua-monitor/conf.json
+	procd_open_instance
+	procd_set_param command "$PROG"
+	# procd_append_param command "-h" ${host}
+	# procd_append_param command "-p" ${port}
+	procd_set_param respawn
+	procd_close_instance
+
+}
+
+stop_service() {
+	config_load "${NAME}"
+	config_get pidfile main pidfile
+	[ -z "$pidfile" ] && pidfile="/var/run/lua-monitor.pid"
+	local pid=$(cat ${pidfile})
+	echo "$pidfile  ${pid})"
+	kill -9 ${pid}
+	echo "kill -9 ${pid}"
+	killall monitor.lua
+}
