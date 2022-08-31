@@ -1,0 +1,14 @@
+[Unit]
+Description=Daemon to start lua-monitor
+
+[Service]
+Type=simple
+#User=nobody
+Restart=on-failure
+RestartSec=5s
+ExecStart=/usr/bin/monitor.lua
+ExecStop=/bin/kill -9 $MMAINPID
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target

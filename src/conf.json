@@ -1,0 +1,1 @@
+{ "pidfile": "/var/run/lua-monitor.pid", "debug_level": "info", "debug_file": "/tmp/lua-monitor.log", "include": [ "/etc/lua-monitor/conf.d" ] }

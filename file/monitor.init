@@ -32,9 +32,16 @@ start_service() {
 	[ -z "$debug_level" ] && debug_level="info"
 	json_init
 	json_add_string pidfile $pidfile
-	json_add_string include $include
 	json_add_string debug_level $debug_level
 	[ -n "$debug_file" ] && json_add_string debug_file $debug_file
+
+	json_add_array include
+	for i in $include
+	do
+		echo "include = $i"
+		json_add_string "" $i
+	done
+	json_select ..
 	res=$(json_dump)
 	mkdir /etc/lua-monitor/ -p
 	echo $res >/etc/lua-monitor/conf.json
